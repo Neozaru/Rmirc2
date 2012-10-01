@@ -12,5 +12,7 @@ public interface InterfaceSujetDiscussion extends Remote {
 	
 	public void diffuse( String message ) throws RemoteException;
 	
+	public String get_titre() throws RemoteException;
+	
 	
 }

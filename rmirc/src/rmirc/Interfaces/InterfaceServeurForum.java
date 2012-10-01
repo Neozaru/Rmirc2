@@ -7,4 +7,6 @@ public interface InterfaceServeurForum extends Remote {
 
 	public InterfaceSujetDiscussion obtientSujet( String titre_sujet ) throws RemoteException;
 	
+	public boolean enregistreSujet( InterfaceSujetDiscussion sujet ) throws RemoteException;
+	
 }

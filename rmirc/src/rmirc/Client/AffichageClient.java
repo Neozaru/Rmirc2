@@ -2,6 +2,7 @@ package rmirc.Client;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.rmi.ConnectException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -59,8 +60,7 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
         try {
             String name = "TohuBohu";
             Registry registry = LocateRegistry.getRegistry(0);
-            
-            
+                       
             InterfaceServeurForum forum = (InterfaceServeurForum) registry.lookup(name);
             
  
@@ -98,7 +98,13 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 	            			}
 	            			else if ( spl[0].equals("/msg") && spl.length > 2 ) {
 	            				
-	            				suj.diffuse(spl[2]);
+	            				// On peut tester si le Serveur est bien toujours la 
+	            				try {
+	            					suj.diffuse(spl[2]);
+	            				}
+	            				catch ( ConnectException e ) {
+	            					System.out.println("Erreur : Connexion avec le canal perdue. Tentez de rejoindre le canal.");
+	            				}
 	            				
 	            			}
             			}

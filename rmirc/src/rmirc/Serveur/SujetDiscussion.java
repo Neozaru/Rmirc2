@@ -59,6 +59,12 @@ public class SujetDiscussion extends UnicastRemoteObject implements InterfaceSuj
 		
 	}
 
+	@Override
+	public String get_titre() throws RemoteException {
+
+		return _titre;
+	}
+
 	
 	
 }

@@ -22,33 +22,50 @@ public class ServeurForum extends UnicastRemoteObject implements InterfaceServeu
 
 	private final String[] DEFAULTS_SUJETS = { "musique", "cinema", "pr0n", "poneys", "ornithorynques" };
 	
-	private Map<String,SujetDiscussion> _sujets;
+	private Map<String,InterfaceSujetDiscussion> _sujets;
 	
 	public ServeurForum() throws RemoteException {
 		super();
-		_sujets = new HashMap<String,SujetDiscussion>();
+		_sujets = new HashMap<String,InterfaceSujetDiscussion>();
 		
+		/* // Decommentez pour activer des cannaux par defaut sur le serveur principal 
 		for ( int i=0; i<DEFAULTS_SUJETS.length; i++ ) {
 			
 			String titre = DEFAULTS_SUJETS[i];
 			_sujets.put(titre, new SujetDiscussion(titre));
 		}
+		*/
 		
 	}
 	
-
-
 
 	@Override
 	public InterfaceSujetDiscussion obtientSujet(String titre_sujet)
 			throws RemoteException {
 		
+		/* Default subjects */
 		if ( _sujets.containsKey(titre_sujet) ) {
 			return _sujets.get(titre_sujet);
 		}
 		
 		return null;
 	}
+	
+
+	@Override
+	public boolean enregistreSujet( InterfaceSujetDiscussion sujet )
+			throws RemoteException {
+		
+		/* Default subjects */
+		if ( !_sujets.containsValue(sujet) ) {
+			_sujets.put(sujet.get_titre(), sujet);
+			return true;
+		}
+			
+		
+		return false;
+	}
+	
 	
 	
     public static void main(String[] args) {
@@ -84,5 +101,7 @@ public class ServeurForum extends UnicastRemoteObject implements InterfaceServeu
         }
         
     }
+
+
 
 }
