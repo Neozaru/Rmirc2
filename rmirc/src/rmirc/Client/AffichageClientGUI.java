@@ -1,21 +1,50 @@
 package rmirc.Client;
 
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.rmi.RemoteException;
+import java.util.HashMap;
+import java.util.Map;
 
-import rmirc.Client.AffichageClient.UserMode;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListModel;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+
+
 import rmirc.Interfaces.InterfaceServeurForum;
 import rmirc.Interfaces.InterfaceSujetDiscussion;
 
-public class AffichageClientGUI extends AffichageClient {
+public class AffichageClientGUI extends AffichageClient implements MouseListener {
+
+	
+	private JFrame _main_frame;
+	private DefaultListModel _subjects_listmodel;
+	private JButton _refresh_button;
+	private JList _subjects_list;
+	
+	private Map<InterfaceSujetDiscussion,FenetreSujetGUI> _fenetres_sujets;
 
 	public AffichageClientGUI(InterfaceServeurForum srv) throws RemoteException {
-		super(srv);
-		// TODO Auto-generated constructor stub
+		this(srv,"Unamed");
 	}
 	
 	public AffichageClientGUI(InterfaceServeurForum srv, String nickname) throws RemoteException {
 		super(srv,nickname);
-		// TODO Auto-generated constructor stub
+		_fenetres_sujets = new HashMap<InterfaceSujetDiscussion,FenetreSujetGUI>();
 	}
 	
 	@Override
@@ -24,21 +53,125 @@ public class AffichageClientGUI extends AffichageClient {
 	}
 	
 	private void start_gui() {
+		
+		
 		_current_user_mode = UserMode.GUI_MODE;
+		_main_frame = new JFrame("RMIrc");
+		
+		GridBagLayout gbl = new GridBagLayout();
+		GridBagConstraints gbc = new GridBagConstraints();
+		//gbc.HORIZONTAL;
+	    gbc.fill = GridBagConstraints.HORIZONTAL;;
+	    gbc.gridx = 1;
+	    gbc.gridy = GridBagConstraints.RELATIVE;
+	    gbc.fill = GridBagConstraints.VERTICAL
+	    		;;
+
+		JPanel _subject_list_panel = new JPanel(gbl);
+		//JButton _a_button = new JButton("clic");
+		
+		_subjects_listmodel = new DefaultListModel();
+		
+		_refresh_button = new JButton("Refresh");
+		JLabel list_label = new JLabel("Subjects :");
+		
+		_subjects_list = new JList(_subjects_listmodel);
+		_subjects_list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		//list.addListSelectionListener(this);
+		_subjects_list.addMouseListener(this);
+		
+		_subjects_list.setFixedCellWidth(150);
+		_subjects_list.setFixedCellHeight(20);
+		
+	    JScrollPane scrollPane = new JScrollPane(_subjects_list);
+	    _subject_list_panel.add(_refresh_button,gbc);
+	    _subject_list_panel.add(list_label,gbc);
+		_subject_list_panel.add(scrollPane,gbc);
+		
+		
+		_main_frame.setContentPane(_subject_list_panel);
+		
+		_main_frame.addWindowListener(new WindowAdapter()
+		{
+	         public void windowClosing(WindowEvent e)
+	         {
+	        	 System.out.println("Exiting...");
+	        	 _main_frame.dispose();
+	        	 System.exit(0); //calling the method is a must
+	         }
+		});
+		_main_frame.setBounds(300, 300, 300, 300);
+		_main_frame.pack();
+		_main_frame.setVisible(true);
+		
+		try {
+			this.refresh_subject_list();
+		} catch (RemoteException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+	}
+	
+	private void refresh_subject_list() throws RemoteException {
+		
+		
+		this.pull_subjects_list();
+		
+		_subjects_listmodel.removeAllElements();
+		for ( String titre_sujet : _sujets_disponibles.keySet() ) {
+			_subjects_listmodel.addElement(titre_sujet);
+		}
+		
+		System.out.println("(List refreshed)");
+	}
+	
+	@Override
+	public boolean register_to_subject( InterfaceSujetDiscussion subject ) {
+		
+		if ( super.register_to_subject(subject) && !_sujets_suivis.containsKey(subject)) {
+			
+			if ( !_fenetres_sujets.containsKey(subject) ) {
+				_fenetres_sujets.put(subject,new FenetreSujetGUI(this,subject));
+			}
+			
+			return true;
+		}
+		
+		return false;
+	
+	}
+	
+	@Override
+	public boolean unregister_from_subject( InterfaceSujetDiscussion subject ) {
+		
+		if ( super.unregister_from_subject(subject) ) {
+		
+			if ( _fenetres_sujets.containsKey(subject) ) {
+				_fenetres_sujets.get(subject).dispose();
+				_fenetres_sujets.remove(subject);
+			}
+			
+		}
+		
+		return false;
+		
 	}
 
 	@Override
 	public void affiche(InterfaceSujetDiscussion sujet, String message) throws RemoteException {
+		super.affiche(sujet, message);
 		
-		System.out.println("["+sujet.get_titre()+"] " + message);
-		
+		if ( _fenetres_sujets.containsKey(sujet) ) {
+			_fenetres_sujets.get(sujet).print_message(message);
+		}
 	}    
 
 	@Override
 	public void notifyUnavailable(InterfaceSujetDiscussion sujet)
 			throws RemoteException {
 		super.notifyUnavailable(sujet);
-		// TODO Auto-generated method stub
+		this.refresh_subject_list();
 		
 	}
 
@@ -61,6 +194,54 @@ public class AffichageClientGUI extends AffichageClient {
 	 * 
 	 */
 	private static final long serialVersionUID = -6234833162366161500L;
+
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		// TODO Auto-generated method stub
+	   if(e.getClickCount() == 2) {
+		     int index = _subjects_list.locationToIndex(e.getPoint());
+		     ListModel dlm = _subjects_list.getModel();
+		     Object item = dlm.getElementAt(index);;
+		     _subjects_list.ensureIndexIsVisible(index);
+		     System.out.println("Double clicked on " + item);
+		     
+		     InterfaceSujetDiscussion suj = null;
+			try {
+				suj = _serveur.obtientSujet(item.toString());
+			} catch (RemoteException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		     
+		     if ( suj != null ) {
+		    	 this.register_to_subject(suj);
+		     }
+		     
+		     //this.
+	   }
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+	}
+
 	
 	
 

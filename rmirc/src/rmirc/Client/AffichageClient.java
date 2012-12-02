@@ -47,7 +47,22 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 		_sujets_disponibles = new HashMap<String,InterfaceSujetDiscussion>();
 		_sujets_suivis = new HashMap<String,InterfaceSujetDiscussion>();
 		_username = ( username != null ) ? username : "Unamed";
+		
+		if ( _serveur != null ) {
+			//_serveur.recupereListeDesSujets();
+		}
     }
+	
+	protected void pull_subjects_list() {
+		
+		try {
+			_sujets_disponibles = _serveur.recupereListeDesSujets();
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
 	
 	private InterfaceSujetDiscussion find_subject( String subject_name ) {
 		
@@ -63,7 +78,7 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 		
 	}
 	
-	private boolean register_to_subject( InterfaceSujetDiscussion subject ) {
+	public boolean register_to_subject( InterfaceSujetDiscussion subject ) {
 		
 		try {
 			subject.inscription(this);
@@ -78,7 +93,7 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 		
 	}
 	
-	private boolean unregister_from_subject( InterfaceSujetDiscussion subject ) {
+	public boolean unregister_from_subject( InterfaceSujetDiscussion subject ) {
 		
 		try {
 			subject.desInscription(this);
@@ -93,7 +108,7 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 		
 	}
 	
-	private boolean send_message_on_subject( InterfaceSujetDiscussion subject, String message ) {
+	public boolean send_message_on_subject( InterfaceSujetDiscussion subject, String message ) {
 		
 		try {
 			boolean ret = subject.diffuse(this,message);
@@ -204,7 +219,8 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 	@Override
 	public void notifyUnavailable(InterfaceSujetDiscussion sujet)
 			throws RemoteException {
-		// TODO Auto-generated method stub
+		_sujets_disponibles.remove(sujet.get_titre());
+		_sujets_suivis.remove(sujet.get_titre());
 		
 	}
 

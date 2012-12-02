@@ -7,7 +7,10 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import rmirc.Interfaces.InterfaceServeurForum;
 import rmirc.Interfaces.InterfaceSujetDiscussion;
@@ -66,7 +69,16 @@ public class ServeurForum extends UnicastRemoteObject implements InterfaceServeu
 		return false;
 	}
 	
-	
+	@Override
+	public Map<String,InterfaceSujetDiscussion> recupereListeDesSujets() throws RemoteException {
+		
+		System.out.println("Sujets : ");
+		for ( String str : _sujets.keySet() ) {
+			System.out.println("- " + str);
+		}
+		
+		return _sujets;
+	}
 	
     public static void main(String[] args) {
     	
@@ -101,6 +113,9 @@ public class ServeurForum extends UnicastRemoteObject implements InterfaceServeu
         }
         
     }
+
+
+
 
 
 
