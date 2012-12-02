@@ -9,7 +9,6 @@ import java.rmi.registry.Registry;
 import rmirc.Interfaces.InterfaceAffichageClient;
 import rmirc.Interfaces.InterfaceServeurForum;
 import rmirc.Interfaces.InterfaceSujetDiscussion;
-import rmirc.Serveur.SujetDiscussion;
 
 public class FournisseurDeSujet {
 

@@ -5,6 +5,15 @@ import java.rmi.RemoteException;
 
 public interface InterfaceAffichageClient extends Remote {
 
-	public void affiche( String message ) throws RemoteException;
+	public void affiche( InterfaceSujetDiscussion sujet, String message ) throws RemoteException;
 	
+	public String getUsername() throws RemoteException; 
+
+	/* More */
+	public void notifyUnavailable( InterfaceSujetDiscussion sujet ) throws RemoteException;
+	
+	public void notifyUserConnect( InterfaceSujetDiscussion sujet, String username ) throws RemoteException; 
+
+	public void notifyUserDisconnect( InterfaceSujetDiscussion sujet, String username ) throws RemoteException; 
+
 }

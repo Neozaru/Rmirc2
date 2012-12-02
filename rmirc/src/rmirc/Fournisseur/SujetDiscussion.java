@@ -1,4 +1,4 @@
-package rmirc.Serveur;
+package rmirc.Fournisseur;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -30,7 +30,7 @@ public class SujetDiscussion extends UnicastRemoteObject implements InterfaceSuj
 			throws RemoteException {
 
 		_clients.add(client);
-		client.affiche("Vous etes inscrit au sujet "+_titre+" ! :)");
+		client.affiche(this,"Vous etes inscrit au sujet "+_titre+" ! :)");
 		
 	}
 
@@ -39,11 +39,11 @@ public class SujetDiscussion extends UnicastRemoteObject implements InterfaceSuj
 			throws RemoteException {
 
 		if ( _clients.contains(client) ) {
+			client.affiche(this, "Vous etes maintenant desinscrit du sujet "+_titre);
 			_clients.remove(client);
-			client.affiche("Vous etes maintenant desinscrit du sujet "+_titre);
 		}
 		else {
-			client.affiche("[WTF] Vous n'etes pas inscrit au sujet "+_titre);
+			client.affiche(this, "[WTF] Vous n'etes pas inscrit au sujet "+_titre);
 		}
 		
 	}
@@ -54,8 +54,21 @@ public class SujetDiscussion extends UnicastRemoteObject implements InterfaceSuj
 		Iterator<InterfaceAffichageClient> iterator = _clients.iterator();
 		
 		while ( iterator.hasNext() ) {
-			iterator.next().affiche(message);
+			iterator.next().affiche(this,message);
 		}
+		
+	}
+	
+	@Override
+	public boolean diffuse(InterfaceAffichageClient iface_client, String message)
+			throws RemoteException {
+		
+		if ( iface_client != null && _clients.contains(iface_client) ) {
+			this.diffuse(iface_client.getUsername() + " says : " + message);
+			return true;
+		}
+		
+		return false;
 		
 	}
 
@@ -64,6 +77,8 @@ public class SujetDiscussion extends UnicastRemoteObject implements InterfaceSuj
 
 		return _titre;
 	}
+
+
 
 	
 	
