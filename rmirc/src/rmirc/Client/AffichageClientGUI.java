@@ -4,6 +4,8 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
@@ -28,7 +30,7 @@ import javax.swing.event.ListSelectionListener;
 import rmirc.Interfaces.InterfaceServeurForum;
 import rmirc.Interfaces.InterfaceSujetDiscussion;
 
-public class AffichageClientGUI extends AffichageClient implements MouseListener {
+public class AffichageClientGUI extends AffichageClient implements MouseListener, ActionListener {
 
 	
 	private JFrame _main_frame;
@@ -73,6 +75,8 @@ public class AffichageClientGUI extends AffichageClient implements MouseListener
 		_subjects_listmodel = new DefaultListModel();
 		
 		_refresh_button = new JButton("Refresh");
+		_refresh_button.addActionListener(this);
+		
 		JLabel list_label = new JLabel("Subjects :");
 		
 		_subjects_list = new JList(_subjects_listmodel);
@@ -104,16 +108,13 @@ public class AffichageClientGUI extends AffichageClient implements MouseListener
 		_main_frame.pack();
 		_main_frame.setVisible(true);
 		
-		try {
-			this.refresh_subject_list();
-		} catch (RemoteException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+
+		this.refresh_subject_list();
+	
 
 	}
 	
-	private void refresh_subject_list() throws RemoteException {
+	private void refresh_subject_list() {
 		
 		
 		this.pull_subjects_list();
@@ -122,6 +123,8 @@ public class AffichageClientGUI extends AffichageClient implements MouseListener
 		for ( String titre_sujet : _sujets_disponibles.keySet() ) {
 			_subjects_listmodel.addElement(titre_sujet);
 		}
+		
+		_subjects_list.repaint();
 		
 		System.out.println("(List refreshed)");
 	}
@@ -171,6 +174,11 @@ public class AffichageClientGUI extends AffichageClient implements MouseListener
 	public void notifyUnavailable(InterfaceSujetDiscussion sujet)
 			throws RemoteException {
 		super.notifyUnavailable(sujet);
+		
+		if ( _fenetres_sujets.containsKey(sujet) ) {
+			_fenetres_sujets.get(sujet).dispose();
+			_fenetres_sujets.remove(sujet);
+		}
 		this.refresh_subject_list();
 		
 	}
@@ -210,15 +218,16 @@ public class AffichageClientGUI extends AffichageClient implements MouseListener
 			try {
 				suj = _serveur.obtientSujet(item.toString());
 			} catch (RemoteException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				System.out.println("Erreur : Sujet non dispo");
+				this.refresh_subject_list();
 			}
 		     
 		     if ( suj != null ) {
-		    	 this.register_to_subject(suj);
+		    	 if (!this.register_to_subject(suj)) {
+					this.refresh_subject_list();
+		    	 }
 		     }
 		     
-		     //this.
 	   }
 	}
 
@@ -240,6 +249,15 @@ public class AffichageClientGUI extends AffichageClient implements MouseListener
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
 		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+
+		if ( e.getSource().equals(_refresh_button) ) {
+			this.refresh_subject_list();
+		}
+		
 	}
 
 	

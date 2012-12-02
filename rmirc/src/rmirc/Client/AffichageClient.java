@@ -58,8 +58,9 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 		try {
 			_sujets_disponibles = _serveur.recupereListeDesSujets();
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Server unreachable. (is it online ?)");
+			System.out.println("Exiting ...");
+			System.exit(0);
 		}
 		
 	}
@@ -85,8 +86,7 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 			_sujets_suivis.put(subject.get_titre(), subject);
 			return true;
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
 		}
 		
 		return false;

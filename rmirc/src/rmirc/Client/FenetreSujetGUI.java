@@ -85,7 +85,12 @@ public class FenetreSujetGUI extends JFrame implements ActionListener {
 		
 		if ( e.getSource().equals(_new_message_button) && !_message_field.getText().isEmpty() ) {
 
-			_client.send_message_on_subject(_sujet, _message_field.getText());
+			if ( !_client.send_message_on_subject(_sujet, _message_field.getText()) ) {
+				this.dispose();
+			}
+			
+			_message_field.setText("");
+			
 		
 		}
 		

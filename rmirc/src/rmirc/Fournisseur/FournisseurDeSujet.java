@@ -62,9 +62,10 @@ public class FournisseurDeSujet {
             
         } catch (Exception e) {
         	
-            System.err.println("MyOwn exception : ");
-            e.printStackTrace();
-            
+            System.err.println("Server Unreachable (is it online ?)");
+            System.exit(0);
+            //e.printStackTrace();
+          
         }
         
     }
