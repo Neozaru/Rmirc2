@@ -21,17 +21,21 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 
+import rmirc.Interfaces.InterfaceAffichageClient;
 import rmirc.Interfaces.InterfaceServeurForum;
 import rmirc.Interfaces.InterfaceSujetDiscussion;
 
 public class AffichageClientGUI extends AffichageClient implements MouseListener, ActionListener {
 
+	private JTextField _text_username;
+	private JButton _button_change_username;
 	
 	private JFrame _main_frame;
 	private DefaultListModel _subjects_listmodel;
@@ -66,9 +70,18 @@ public class AffichageClientGUI extends AffichageClient implements MouseListener
 	    gbc.fill = GridBagConstraints.HORIZONTAL;;
 	    gbc.gridx = 1;
 	    gbc.gridy = GridBagConstraints.RELATIVE;
-	    gbc.fill = GridBagConstraints.VERTICAL
-	    		;;
+	    gbc.fill = GridBagConstraints.VERTICAL;
+	    
+	    _text_username = new JTextField(_username);
+	    _button_change_username = new JButton("Change Username");
+	    _button_change_username.addActionListener(this);
+	    FlowLayout fl = new FlowLayout();
+	    
+	    JPanel nick_panel = new JPanel(fl);
 
+	    nick_panel.add(_text_username);
+	    nick_panel.add(_button_change_username);
+	    
 		JPanel _subject_list_panel = new JPanel(gbl);
 		//JButton _a_button = new JButton("clic");
 		
@@ -88,6 +101,7 @@ public class AffichageClientGUI extends AffichageClient implements MouseListener
 		_subjects_list.setFixedCellHeight(20);
 		
 	    JScrollPane scrollPane = new JScrollPane(_subjects_list);
+	    _subject_list_panel.add(nick_panel);
 	    _subject_list_panel.add(_refresh_button,gbc);
 	    _subject_list_panel.add(list_label,gbc);
 		_subject_list_panel.add(scrollPane,gbc);
@@ -126,21 +140,31 @@ public class AffichageClientGUI extends AffichageClient implements MouseListener
 		
 		_subjects_list.repaint();
 		
-		System.out.println("(List refreshed)");
+		System.out.println("(Subject List refreshed)");
 	}
 	
 	@Override
 	public boolean register_to_subject( InterfaceSujetDiscussion subject ) {
 		
-		if ( super.register_to_subject(subject) && !_sujets_suivis.containsKey(subject)) {
-			
-			if ( !_fenetres_sujets.containsKey(subject) ) {
-				_fenetres_sujets.put(subject,new FenetreSujetGUI(this,subject));
+		if ( !_fenetres_sujets.containsKey(subject) ) {
+			FenetreSujetGUI f = new FenetreSujetGUI(this,subject);
+			_fenetres_sujets.put(subject, f);
+		
+		
+			if ( super.register_to_subject(subject) ) {
+				
+				f.refresh_user_list();
+				f.setVisible(true);
+				
+				return true;
+			}
+			else {
+				f.dispose();
+				_fenetres_sujets.remove(subject);
 			}
 			
-			return true;
-		}
 		
+		}
 		return false;
 	
 	}
@@ -187,7 +211,7 @@ public class AffichageClientGUI extends AffichageClient implements MouseListener
 	public void notifyUserConnect(InterfaceSujetDiscussion sujet,
 			String username) throws RemoteException {
 		super.notifyUserConnect(sujet, username);
-		// TODO Auto-generated method stub
+		refresh_subject_window(sujet);
 		
 	}
 
@@ -195,9 +219,31 @@ public class AffichageClientGUI extends AffichageClient implements MouseListener
 	public void notifyUserDisconnect(InterfaceSujetDiscussion sujet,
 			String username) throws RemoteException {
 		super.notifyUserDisconnect(sujet,username);
-		// TODO Auto-generated method stub
+		refresh_subject_window(sujet);
 		
 	}
+	
+	@Override
+	public void notifyUsernameChanged( InterfaceSujetDiscussion sujet, String old_name, InterfaceAffichageClient client)
+			throws RemoteException {
+
+		this.affiche(sujet, "* "+old_name+" is now known as "+client.getUsername());
+		
+		if ( _fenetres_sujets.containsKey(sujet) ) {
+			_fenetres_sujets.get(sujet).refresh_user_list();
+		}
+		
+		
+	}
+	
+	public void refresh_subject_window( InterfaceSujetDiscussion subject ) {
+		
+		if ( _fenetres_sujets.containsKey(subject) ) {
+			_fenetres_sujets.get(subject).refresh_user_list();
+		}
+		
+	}
+	
 	/**
 	 * 
 	 */
@@ -206,7 +252,8 @@ public class AffichageClientGUI extends AffichageClient implements MouseListener
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		// TODO Auto-generated method stub
+
+	   
 	   if(e.getClickCount() == 2) {
 		     int index = _subjects_list.locationToIndex(e.getPoint());
 		     ListModel dlm = _subjects_list.getModel();
@@ -256,6 +303,9 @@ public class AffichageClientGUI extends AffichageClient implements MouseListener
 
 		if ( e.getSource().equals(_refresh_button) ) {
 			this.refresh_subject_list();
+		}
+		else if ( e.getSource().equals(_button_change_username) ) {
+			this.change_username(_text_username.getText());
 		}
 		
 	}

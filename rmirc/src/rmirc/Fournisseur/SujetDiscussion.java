@@ -2,8 +2,10 @@ package rmirc.Fournisseur;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import rmirc.Interfaces.InterfaceAffichageClient;
@@ -30,7 +32,10 @@ public class SujetDiscussion extends UnicastRemoteObject implements InterfaceSuj
 			throws RemoteException {
 
 		_clients.add(client);
-		client.affiche(this,"Vous etes inscrit au sujet "+_titre+" ! :)");
+
+		for (InterfaceAffichageClient a_client : _clients) {
+			a_client.notifyUserConnect(this, client.getUsername());
+		}
 		
 	}
 
@@ -38,12 +43,16 @@ public class SujetDiscussion extends UnicastRemoteObject implements InterfaceSuj
 	public synchronized void desInscription(InterfaceAffichageClient client)
 			throws RemoteException {
 
-		if ( _clients.contains(client) ) {
+		if ( client != null && _clients.contains(client) ) {
 			client.affiche(this, "Vous etes maintenant desinscrit du sujet "+_titre);
 			_clients.remove(client);
 		}
 		else {
 			client.affiche(this, "[WTF] Vous n'etes pas inscrit au sujet "+_titre);
+		}
+		
+		for (InterfaceAffichageClient a_client : _clients) {
+			a_client.notifyUserDisconnect(this, client.getUsername());
 		}
 		
 	}
@@ -60,11 +69,11 @@ public class SujetDiscussion extends UnicastRemoteObject implements InterfaceSuj
 	}
 	
 	@Override
-	public boolean diffuse(InterfaceAffichageClient iface_client, String message)
+	public boolean diffuse(InterfaceAffichageClient client, String message)
 			throws RemoteException {
 		
-		if ( iface_client != null && _clients.contains(iface_client) ) {
-			this.diffuse(iface_client.getUsername() + " says : " + message);
+		if ( client != null && _clients.contains(client) ) {
+			this.diffuse("["+client.getUsername() + "] : " + message);
 			return true;
 		}
 		
@@ -76,6 +85,24 @@ public class SujetDiscussion extends UnicastRemoteObject implements InterfaceSuj
 	public String get_titre() throws RemoteException {
 
 		return _titre;
+	}
+
+	@Override
+	public Set<InterfaceAffichageClient> recupererListeUtilisateurs()
+			throws RemoteException {
+		
+		
+		return _clients;
+	}
+
+	@Override
+	public void notifyUsernameChanged(String old_username,
+			InterfaceAffichageClient iface_client) throws RemoteException {
+
+		for (InterfaceAffichageClient a_client : _clients) {
+			a_client.notifyUsernameChanged(this, old_username, iface_client);
+		}
+		
 	}
 
 

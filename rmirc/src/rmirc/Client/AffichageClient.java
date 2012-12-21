@@ -81,11 +81,15 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 	
 	public boolean register_to_subject( InterfaceSujetDiscussion subject ) {
 		
-		try {
-			subject.inscription(this);
-			_sujets_suivis.put(subject.get_titre(), subject);
-			return true;
-		} catch (RemoteException e) {
+		if ( !_sujets_suivis.containsValue(subject) ) {
+		
+			try {
+				subject.inscription(this);
+				_sujets_suivis.put(subject.get_titre(), subject);
+				return true;
+			} catch (RemoteException e) {
+				
+			}
 			
 		}
 		
@@ -116,6 +120,10 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 		}
 		catch ( ConnectException e ) {
 			System.out.println("Erreur : Connexion avec le canal perdue. Tentez de rejoindre le canal.");
+			try {
+				this.notifyUnavailable(subject);
+			} catch (RemoteException e1) {
+			}
 		} 
 		catch (RemoteException e) {
 			// TODO Auto-generated catch block
@@ -123,6 +131,16 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 		}
 		
 		return false;
+	}
+	
+	public void change_username( String new_username ) {
+		
+		if ( !_username.equals(new_username) ) {
+			
+			_username = new_username;
+			
+		}
+		
 	}
 	
 	public void onStart() {
@@ -227,14 +245,16 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 	@Override
 	public void notifyUserConnect(InterfaceSujetDiscussion sujet,
 			String username) throws RemoteException {
-		// TODO Auto-generated method stub
+		
+		this.affiche(sujet, "* "+username+" joined the channel");
 		
 	}
 
 	@Override
 	public void notifyUserDisconnect(InterfaceSujetDiscussion sujet,
 			String username) throws RemoteException {
-		// TODO Auto-generated method stub
+		
+		this.affiche(sujet, "* "+username+" has left the channel");
 		
 	}
 	
@@ -269,7 +289,7 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
         }
         try {
         	
-        	String mode = "cli";
+        	String mode = "gui";
         	
             String name = "TohuBohu";
             Registry registry = LocateRegistry.getRegistry(0);
@@ -291,11 +311,11 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
             if ( srv != null ) {
 	            AffichageClient ac = null;
 	            
-	            if ( mode.equals("gui")) {
-	            	ac = new AffichageClientGUI(srv,nickname);
+	            if ( mode.equals("cli")) {
+	            	ac = new AffichageClient(srv,nickname);
 	            }
 	            else {
-	            	ac = new AffichageClient(srv,nickname);
+	            	ac = new AffichageClientGUI(srv,nickname);
 	            }
 	            
 	            ac.onStart();
@@ -310,6 +330,14 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
             e.printStackTrace();
         }
     }
+
+	@Override
+	public void notifyUsernameChanged( InterfaceSujetDiscussion sujet, String old_name, InterfaceAffichageClient client)
+			throws RemoteException {
+
+		System.out.println("* "+old_name+" is now known as "+client.getUsername());
+		
+	}
 
 
     

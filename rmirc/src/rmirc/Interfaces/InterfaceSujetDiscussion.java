@@ -2,6 +2,8 @@ package rmirc.Interfaces;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.Map;
+import java.util.Set;
 
 
 public interface InterfaceSujetDiscussion extends Remote {
@@ -16,5 +18,8 @@ public interface InterfaceSujetDiscussion extends Remote {
 	
 	public String get_titre() throws RemoteException;
 	
+	public Set<InterfaceAffichageClient> recupererListeUtilisateurs() throws RemoteException;
+
+	public void notifyUsernameChanged( String old_username, InterfaceAffichageClient iface_client ) throws RemoteException;
 	
 }
