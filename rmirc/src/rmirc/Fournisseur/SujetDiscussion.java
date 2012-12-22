@@ -2,10 +2,8 @@ package rmirc.Fournisseur;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 import rmirc.Interfaces.InterfaceAffichageClient;

@@ -3,7 +3,6 @@ package rmirc.Client;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -24,9 +23,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-
 
 import rmirc.Interfaces.InterfaceAffichageClient;
 import rmirc.Interfaces.InterfaceServeurForum;
@@ -134,8 +130,12 @@ public class AffichageClientGUI extends AffichageClient implements MouseListener
 		this.pull_subjects_list();
 		
 		_subjects_listmodel.removeAllElements();
-		for ( String titre_sujet : _sujets_disponibles.keySet() ) {
-			_subjects_listmodel.addElement(titre_sujet);
+		for ( InterfaceSujetDiscussion sujet : _sujets_disponibles ) {
+			try {
+				_subjects_listmodel.addElement(sujet.get_titre());
+			} catch (RemoteException e) {
+				this.onSubjectUnavailable(sujet);
+			}
 		}
 		
 		_subjects_list.repaint();
@@ -195,9 +195,8 @@ public class AffichageClientGUI extends AffichageClient implements MouseListener
 	}    
 
 	@Override
-	public void notifyUnavailable(InterfaceSujetDiscussion sujet)
-			throws RemoteException {
-		super.notifyUnavailable(sujet);
+	public void onSubjectUnavailable(InterfaceSujetDiscussion sujet) {
+		super.onSubjectUnavailable(sujet);
 		
 		if ( _fenetres_sujets.containsKey(sujet) ) {
 			_fenetres_sujets.get(sujet).dispose();

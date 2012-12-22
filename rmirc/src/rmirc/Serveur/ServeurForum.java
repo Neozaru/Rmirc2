@@ -7,8 +7,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -23,7 +22,7 @@ public class ServeurForum extends UnicastRemoteObject implements InterfaceServeu
 	private static final long serialVersionUID = 2644046911738009139L;
 	
 
-	private final String[] DEFAULTS_SUJETS = { "musique", "cinema", "pr0n", "poneys", "ornithorynques" };
+	//private final String[] DEFAULTS_SUJETS = { "musique", "cinema", "pr0n", "poneys", "ornithorynques" };
 	
 	private Map<String,InterfaceSujetDiscussion> _sujets;
 	
@@ -70,14 +69,14 @@ public class ServeurForum extends UnicastRemoteObject implements InterfaceServeu
 	}
 	
 	@Override
-	public Map<String,InterfaceSujetDiscussion> recupereListeDesSujets() throws RemoteException {
+	public Set<InterfaceSujetDiscussion> recupereListeDesSujets() throws RemoteException {
 		
 		System.out.println("Sujets : ");
 		for ( String str : _sujets.keySet() ) {
 			System.out.println("- " + str);
 		}
 		
-		return _sujets;
+		return new HashSet<InterfaceSujetDiscussion>(_sujets.values());
 	}
 	
     public static void main(String[] args) {
@@ -101,6 +100,9 @@ public class ServeurForum extends UnicastRemoteObject implements InterfaceServeu
                 (InterfaceServeurForum) UnicastRemoteObject.exportObject(forum, 0);
                 */
             Registry registry = LocateRegistry.getRegistry(0);
+            
+            if ( registry != null ) {}
+            
             Naming.rebind(url, forum);
             
             System.out.println("MyOwn bounded");

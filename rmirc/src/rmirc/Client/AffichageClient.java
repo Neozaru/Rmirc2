@@ -7,8 +7,8 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 import rmirc.Interfaces.InterfaceAffichageClient;
 import rmirc.Interfaces.InterfaceServeurForum;
@@ -26,8 +26,8 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 	
 	protected InterfaceServeurForum _serveur;
 	
-	protected Map<String,InterfaceSujetDiscussion> _sujets_disponibles;
-	protected Map<String,InterfaceSujetDiscussion> _sujets_suivis;
+	protected Set<InterfaceSujetDiscussion> _sujets_disponibles;
+	protected Set<InterfaceSujetDiscussion> _sujets_suivis;
 	protected String _username;
 	
 	protected UserMode _current_user_mode = UserMode.UNKNOWN;
@@ -44,8 +44,8 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 	public AffichageClient( InterfaceServeurForum srv, String username ) throws RemoteException {
 		
 		_serveur = srv;
-		_sujets_disponibles = new HashMap<String,InterfaceSujetDiscussion>();
-		_sujets_suivis = new HashMap<String,InterfaceSujetDiscussion>();
+		_sujets_disponibles = new HashSet<InterfaceSujetDiscussion>();
+		_sujets_suivis = new HashSet<InterfaceSujetDiscussion>();
 		_username = ( username != null ) ? username : "Unamed";
 		
 		if ( _serveur != null ) {
@@ -81,11 +81,11 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 	
 	public boolean register_to_subject( InterfaceSujetDiscussion subject ) {
 		
-		if ( !_sujets_suivis.containsValue(subject) ) {
+		if ( !_sujets_suivis.contains(subject) ) {
 		
 			try {
 				subject.inscription(this);
-				_sujets_suivis.put(subject.get_titre(), subject);
+				_sujets_suivis.add(subject);
 				return true;
 			} catch (RemoteException e) {
 				
@@ -97,15 +97,14 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 		
 	}
 	
-	public boolean unregister_from_subject( InterfaceSujetDiscussion subject ) {
+	public boolean unregister_from_subject( InterfaceSujetDiscussion sujet ) {
 		
 		try {
-			subject.desInscription(this);
-			_sujets_suivis.remove(subject.get_titre());
+			sujet.desInscription(this);
+			_sujets_suivis.remove(sujet);
 			return true;
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			onSubjectUnavailable(sujet);
 		}
 		
 		return false;
@@ -120,10 +119,8 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 		}
 		catch ( ConnectException e ) {
 			System.out.println("Erreur : Connexion avec le canal perdue. Tentez de rejoindre le canal.");
-			try {
-				this.notifyUnavailable(subject);
-			} catch (RemoteException e1) {
-			}
+			this.onSubjectUnavailable(subject);
+		
 		} 
 		catch (RemoteException e) {
 			// TODO Auto-generated catch block
@@ -137,7 +134,18 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 		
 		if ( !_username.equals(new_username) ) {
 			
+			String old_username = _username;
 			_username = new_username;
+			
+			for (InterfaceSujetDiscussion sujet : _sujets_suivis) {
+				try {
+					sujet.notifyUsernameChanged(old_username, this);
+				} catch (RemoteException e) {
+					System.out.println("Subject is unavailable");
+					this.onSubjectUnavailable(sujet);
+			
+				}
+			}
 			
 		}
 		
@@ -164,8 +172,12 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 			else if ( cmd.equals("/followed") ) {
 				
 				System.out.println("Followed subjects :");
-				for ( String titre : _sujets_suivis.keySet() ) {
-					System.out.println("- "+titre);
+				for ( InterfaceSujetDiscussion sujet : _sujets_suivis ) {
+					try {
+						System.out.println("- "+sujet.get_titre());
+					} catch (RemoteException e) {
+						this.onSubjectUnavailable(sujet);
+					}
 				}
 
 			}
@@ -234,11 +246,16 @@ public class AffichageClient extends UnicastRemoteObject implements InterfaceAff
 	}
 
 	
-	@Override
-	public void notifyUnavailable(InterfaceSujetDiscussion sujet)
-			throws RemoteException {
-		_sujets_disponibles.remove(sujet.get_titre());
-		_sujets_suivis.remove(sujet.get_titre());
+	
+	public void onSubjectUnavailable(InterfaceSujetDiscussion sujet) {
+	
+		if ( _sujets_disponibles.contains(sujet) ) {
+			_sujets_disponibles.remove(sujet);
+		}
+
+		if ( _sujets_suivis.contains(sujet) ) {
+			_sujets_suivis.remove(sujet);
+		}
 		
 	}
 

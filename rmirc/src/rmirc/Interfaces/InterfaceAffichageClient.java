@@ -3,8 +3,6 @@ package rmirc.Interfaces;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import rmirc.Fournisseur.SujetDiscussion;
-
 public interface InterfaceAffichageClient extends Remote {
 
 	public void affiche( InterfaceSujetDiscussion sujet, String message ) throws RemoteException;
@@ -12,7 +10,7 @@ public interface InterfaceAffichageClient extends Remote {
 	public String getUsername() throws RemoteException; 
 
 	/* More */
-	public void notifyUnavailable( InterfaceSujetDiscussion sujet ) throws RemoteException;
+	//public void notifyUnavailable( InterfaceSujetDiscussion sujet ) throws RemoteException;
 	
 	public void notifyUserConnect( InterfaceSujetDiscussion sujet, String username ) throws RemoteException; 
 

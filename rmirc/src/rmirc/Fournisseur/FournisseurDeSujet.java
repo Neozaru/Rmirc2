@@ -1,12 +1,8 @@
 package rmirc.Fournisseur;
 
-import java.net.InetAddress;
-import java.rmi.Naming;
-import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
-import rmirc.Interfaces.InterfaceAffichageClient;
 import rmirc.Interfaces.InterfaceServeurForum;
 import rmirc.Interfaces.InterfaceSujetDiscussion;
 

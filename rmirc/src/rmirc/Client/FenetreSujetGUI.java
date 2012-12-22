@@ -17,7 +17,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.xml.ws.handler.MessageContext.Scope;
 
 import rmirc.Interfaces.InterfaceAffichageClient;
 import rmirc.Interfaces.InterfaceSujetDiscussion;
@@ -141,11 +140,7 @@ public class FenetreSujetGUI extends JFrame implements ActionListener {
 				_users_listmodel.addElement(user.getUsername());
 			}
 		} catch (RemoteException e) {
-			try {
-				_client.notifyUnavailable(_sujet);
-			} catch (RemoteException e1) {
-				e1.printStackTrace();
-			}
+			_client.onSubjectUnavailable(_sujet);
 		}
 		
 		_user_list.repaint();
